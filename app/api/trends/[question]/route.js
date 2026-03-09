@@ -132,10 +132,24 @@ function analyzeQuestionTrends(data, questionColumn) {
     'What other features do you want to have in SSP?'
   ];
   
-  // Check if this is a text question
-  const isTextQuestion = textQuestions.some(q => 
-    questionColumn.includes(q) || q.includes(questionColumn.substring(0, 50))
-  );
+  // Helper function to normalize text for comparison
+  const normalizeForComparison = (text) => {
+    if (!text) return ''
+    return text
+      .replace(/\r\n/g, ' ')
+      .replace(/\n/g, ' ')
+      .replace(/\r/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+  }
+  
+  // Check if this is a text question (using normalized comparison)
+  const normalizedQuestionColumn = normalizeForComparison(questionColumn)
+  const isTextQuestion = textQuestions.some(q => {
+    const normalizedQ = normalizeForComparison(q)
+    return normalizedQuestionColumn.includes(normalizedQ) || normalizedQ.includes(normalizedQuestionColumn.substring(0, 50))
+  });
   
   // Get all months from the data and sort them chronologically
   const allMonths = Object.keys(data).sort((a, b) => extractMonthOrder(a) - extractMonthOrder(b))
@@ -151,13 +165,30 @@ function analyzeQuestionTrends(data, questionColumn) {
       let questionKey = availableColumns.find(col => col === questionColumn)
       
       if (!questionKey) {
+        // Helper function to normalize text for comparison
+        const normalizeText = (text) => {
+          if (!text) return ''
+          return text
+            .replace(/\r\n/g, ' ')  // Replace \r\n with space
+            .replace(/\n/g, ' ')     // Replace \n with space
+            .replace(/\r/g, ' ')     // Replace \r with space
+            .replace(/\s+/g, ' ')    // Replace multiple spaces with single space
+            .trim()
+            .toLowerCase()
+        }
+        
         // Try normalized matching: normalize both the search question and available columns
-        const normalizedSearchQuestion = questionColumn.replace(/\\r\\n/g, ' ').replace(/\r\n/g, ' ').trim()
+        const normalizedSearchQuestion = normalizeText(questionColumn)
         questionKey = availableColumns.find(col => {
-          const normalizedCol = col.replace(/\\r\\n/g, ' ').replace(/\r\n/g, ' ').trim()
+          const normalizedCol = normalizeText(col)
           
-          // Try exact match first
+          // Try exact match after normalization
           if (normalizedCol === normalizedSearchQuestion) {
+            return true
+          }
+          
+          // Try reverse exact match (Excel column might be shorter)
+          if (normalizedSearchQuestion === normalizedCol) {
             return true
           }
           
@@ -167,6 +198,13 @@ function analyzeQuestionTrends(data, questionColumn) {
               normalizedCol.length > normalizedSearchQuestion.length) {
             const remainder = normalizedCol.substring(normalizedSearchQuestion.length).trim()
             // Only match if remainder starts with parentheses (additional clarification)
+            return remainder.startsWith('(') || remainder.startsWith('-') || remainder.startsWith('/')
+          }
+          
+          // Try reverse prefix match - Excel column is beginning of search question
+          if (normalizedSearchQuestion.startsWith(normalizedCol) && 
+              normalizedSearchQuestion.length > normalizedCol.length) {
+            const remainder = normalizedSearchQuestion.substring(normalizedCol.length).trim()
             return remainder.startsWith('(') || remainder.startsWith('-') || remainder.startsWith('/')
           }
           
@@ -264,7 +302,13 @@ export async function GET(request, { params }) {
   try {
     const { question } = params
     
-    if (!question) {
+    // Decode the question parameter (it comes URL-encoded)
+    const decodedQuestion = decodeURIComponent(question)
+    
+    console.log(`📥 Trends API called with question: "${decodedQuestion}"`)
+    console.log(`📥 Original encoded: "${question}"`)
+    
+    if (!decodedQuestion) {
       return NextResponse.json({ error: 'Question parameter is required' }, { status: 400 })
     }
     
@@ -274,7 +318,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
     
-    const { trends, responseCounts, rawResponseCounts } = analyzeQuestionTrends(data, question)
+    const { trends, responseCounts, rawResponseCounts } = analyzeQuestionTrends(data, decodedQuestion)
     
     // Get all months and sort them
     const allMonths = Object.keys(data).sort((a, b) => extractMonthOrder(a) - extractMonthOrder(b))
@@ -287,12 +331,18 @@ export async function GET(request, { params }) {
     }
     
     const result = {
-      question,
+      question: decodedQuestion,
       trends: sortedTrends,
       responseCounts,
       rawCounts: rawResponseCounts,  // Include original raw counts
       months: allMonths
     }
+    
+    console.log(`📤 Trends API response for "${decodedQuestion}":`, {
+      monthsWithData: Object.keys(sortedTrends),
+      totalMonths: allMonths.length,
+      responseCounts: Object.values(responseCounts).reduce((a, b) => a + b, 0)
+    })
     
     return NextResponse.json(result)
     

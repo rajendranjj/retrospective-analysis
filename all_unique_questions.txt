@@ -33,9 +33,7 @@ Do you get opportunity to learn new things in accordance to your role release ov
 Individual items efforts estimate for completion of the task is done by whom ? (Desired state is by scrum team)
 
 Section Name: Capacity & Workload Management
-What percentage of your capacity in the sprint was reserved for Items such as CS Support Bugs/Requests which cannot be estimated but as a team you reserve some bandwidth, as per history your are aware of such requests and your team reserves capacity for it ?
 Is your reserved capacity for the Historical support activities such as CS Bugs/Support tickets and others, sufficient during the release.
-How much Adhoc requests (Request for which no bandwidth was reserved during Release/Sprint Planning) were received during implementation Phase.
 How was your available capacity utilised during the Release i.e. your workload. (1-Under Utilisation, 5- Over Utilisation)
 What percentage of your capacity in the sprint was reserved for Items such as CS Support Bugs/Requests which cannot be estimated but as a team you reserve some bandwidth, as per history you are aware of such requests and your team reserves capacity for it ?(individual capacity reserved)
 How much Adhoc requests (Request for which no bandwidth was reserved during Release/Sprint Planning) were received post sprint planning.
@@ -59,7 +57,6 @@ Any other thought you would like to share related to the releases.
 In Your individual opinion are we considering the release Delivery Timelines and milestones while we are planning and delivering our assigned tasks
 Do you have any suggestion for improving and streamlining the release further?
 What was your engagement area during this release while not associated with the release deliverables?
-Applicable only for pure DEV or QA Resources - What percent of your available capacity is impacted by process changes and new processes enablement on regular tasks not the other cleanup activities from previous releases (Not Applicable to EM's, SM's & Oth
 
 Section Name: Role & Responsibilities
 What's your primary role?

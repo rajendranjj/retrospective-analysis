@@ -193,13 +193,30 @@ function analyzeDirectorQuestionTrends(data, questionColumn, targetDirector) {
       let questionKey = availableColumns.find(col => col === questionColumn)
       
       if (!questionKey) {
+        // Helper function to normalize text for comparison
+        const normalizeText = (text) => {
+          if (!text) return ''
+          return text
+            .replace(/\r\n/g, ' ')  // Replace \r\n with space
+            .replace(/\n/g, ' ')     // Replace \n with space
+            .replace(/\r/g, ' ')     // Replace \r with space
+            .replace(/\s+/g, ' ')    // Replace multiple spaces with single space
+            .trim()
+            .toLowerCase()
+        }
+        
         // Try normalized matching with prefix support
-        const normalizedSearchQuestion = questionColumn.replace(/\\r\\n/g, ' ').replace(/\r\n/g, ' ').trim()
+        const normalizedSearchQuestion = normalizeText(questionColumn)
         questionKey = availableColumns.find(col => {
-          const normalizedCol = col.replace(/\\r\\n/g, ' ').replace(/\r\n/g, ' ').trim()
+          const normalizedCol = normalizeText(col)
           
-          // Try exact match first
+          // Try exact match after normalization
           if (normalizedCol === normalizedSearchQuestion) {
+            return true
+          }
+          
+          // Try reverse exact match (Excel column might be shorter)
+          if (normalizedSearchQuestion === normalizedCol) {
             return true
           }
           
@@ -208,6 +225,13 @@ function analyzeDirectorQuestionTrends(data, questionColumn, targetDirector) {
               normalizedCol.length > normalizedSearchQuestion.length) {
             const remainder = normalizedCol.substring(normalizedSearchQuestion.length).trim()
             // Only match if remainder starts with parentheses (additional clarification)
+            return remainder.startsWith('(') || remainder.startsWith('-') || remainder.startsWith('/')
+          }
+          
+          // Try reverse prefix match - Excel column is beginning of search question
+          if (normalizedSearchQuestion.startsWith(normalizedCol) && 
+              normalizedSearchQuestion.length > normalizedCol.length) {
+            const remainder = normalizedSearchQuestion.substring(normalizedCol.length).trim()
             return remainder.startsWith('(') || remainder.startsWith('-') || remainder.startsWith('/')
           }
           

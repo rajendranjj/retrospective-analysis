@@ -25,10 +25,24 @@ export default function TrendChart({ trends, questionTitle, responseCounts, rawC
     'What other features do you want to have in SSP?'
   ];
   
-  // Check if this question should display as a table
-  const shouldDisplayAsTable = tableQuestions.some(q => 
-    questionTitle.includes(q) || q.includes(questionTitle.substring(0, 50))
-  );
+  // Helper function to normalize text for comparison
+  const normalizeForComparison = (text: string) => {
+    if (!text) return ''
+    return text
+      .replace(/\r\n/g, ' ')
+      .replace(/\n/g, ' ')
+      .replace(/\r/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+  }
+  
+  // Check if this question should display as a table (using normalized comparison)
+  const normalizedQuestionTitle = normalizeForComparison(questionTitle)
+  const shouldDisplayAsTable = tableQuestions.some(q => {
+    const normalizedQ = normalizeForComparison(q)
+    return normalizedQuestionTitle.includes(normalizedQ) || normalizedQ.includes(normalizedQuestionTitle.substring(0, 50))
+  });
   
   if (shouldDisplayAsTable) {
     // For table questions, convert trends data to raw responses format

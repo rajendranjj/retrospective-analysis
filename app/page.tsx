@@ -258,9 +258,20 @@ export default function Dashboard() {
 
   // Questions to show as tables instead of trend charts
   const isTableQuestion = (question: string) => {
+    // Helper function to normalize text for comparison
+    const normalizeForComparison = (text: string) => {
+      if (!text) return ''
+      return text
+        .replace(/\r\n/g, ' ')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+    }
+    
     const tableQuestions = [
       "What was the action item and how was it resolved during the release?",
-      "What was the action item and how was it resolved during the release? ", // Handle potential trailing space
       "Any other thought you would like to share related to the releases.",
       "Do you have any suggestion for improving and streamlining the release further?",
       "Any Suggestions for Jira enhancements?",
@@ -272,7 +283,12 @@ export default function Dashboard() {
       "Can you elaborate the issue in few words or any Suggestion to solve it with respect to Sprint Velocity / Productivity gains",
       "What other features do you want to have in SSP?"
     ]
-    return tableQuestions.some(tableQ => question.trim() === tableQ.trim())
+    
+    const normalizedQuestion = normalizeForComparison(question)
+    return tableQuestions.some(tableQ => {
+      const normalizedQ = normalizeForComparison(tableQ)
+      return normalizedQuestion === normalizedQ || normalizedQuestion.includes(normalizedQ) || normalizedQ.includes(normalizedQuestion.substring(0, 50))
+    })
   }
 
   // Generate AI summary from text responses
